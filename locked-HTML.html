@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+          name="viewport"/>
+    <meta charset="UTF-8">
+    <title>locked</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script type="text/javascript">
+       var R = 26, CW = 400, CH = 320, OffsetX = 30, OffsetY = 30;
+       //计算每个圆的位置
+       function btnLocal(setX,setY){
+           var arr=[];
+           for(var i=0;i<3;i++){
+               for(var j=0;j<3;j++){
+                   var point={
+                       X:(OffsetX+j*setX+(j*2+1)*R),
+                       Y:(OffsetY+i*setY+(i*2+1)*R)
+                   };
+                   arr.push(point);
+               }
+           }
+           return arr;
+       }
+       var btnLocalArr=[];
+       //加载每个圆
+        window.onload=function(){
+            var canvas=document.getElementById("myCanvas");
+            CW=document.body.offsetWidth;
+            canvas.width=CW;
+            canvas.height=CH;
+            var ctx=canvas.getContext('2d');
+            //两个圆之间的距离
+            var X=(CW-2*OffsetX-R*2*3)/2;
+            var Y=(CH-2*OffsetY-R*2*3)/2;
+            btnLocalArr=btnLocal(X,Y);
+           // ctx.fillStyle='#FF0000';
+            //ctx.fillRect(0,0,800,1000);
+            //ctx.beginPath();
+            //ctx.arc(70,18,15,0,Math.PI*2,true);
+            //ctx.closePath();
+            //ctx.fill();
+            reset(canvas,ctx);
+            draw(ctx,btnLocalArr,[],null);
+        }
+        //画上
+        function draw(ctx,btnLocalArr1,lineArr1,touchPoint){
+            if(lineArr1.length>0){//开始画了,就划线
+                ctx.beginPath();
+                for(var i=0;i<lineArr1.length;i++){
+                    var pointNum=lineArr[i];
+                    ctx.lineTo(btnLocalArr1[pointNum].X,btnLocalArr1[pointNum].Y);
+                }
+                ctx.lineWidth=10;
+                ctx.strokeStyle="#8e8e8e";
+                ctx.stroke();
+                ctx.closePath();
+                if(touchPoint!=null){//停止画了
+                    var lastPointIndex=lineArr1[lineArr1.length];
+                    var lastPoint=btnLocalArr1[lastPointIndex];
+                    ctx.beginPath();
+                    ctx.moveTo(lastPoint.X,lastPoint.Y);
+                    ctx.lineTo(touchPoint.X,touchPoint.Y);
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+            for(var i=0;i<btnLocalArr1.length;i++){//画圈圈
+                var point=btnLocalArr1[i];
+                ctx.fillStyle="#8e8e8e";
+                ctx.beginPath();
+                ctx.arc(point.X,point.Y,R,0,Math.PI*2,true);//最大圈
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle="#ffffff";
+                ctx.beginPath();
+                ctx.arc(point.X,point.Y,R-3,0,Math.PI*2,true);//画白圈圈
+                ctx.closePath();
+                ctx.fill();
+                if(lineArr1.indexOf(i)>=0){//最小的圈圈
+                    ctx.fillStyle="#8e8e8e";
+                    ctx.beginPath();
+                    ctx.arc(point.X,point.Y,R-16,0,Math.PI*2,true);
+                    cxt.closePath();
+                    ctx.fill();
+                }
+            }
+        }
+        function isPointSelect(touches,linePoint){//是否选定圈圈
+            for(var i=0;i<btnLocalArr.length;i++){
+                var currentPoint=btnLocalArr[i];
+                var diffx=Math.abs(currentPoint.X-touches.pageX);
+                var diffy=Math.abs(currentPoint.Y-touches.pageY);
+                var dir=Math.pow((diffx*diffy+diffy*diffy),0.5);
+                if(dir<R){
+                    if(linePoint.indexOf(i)<0){
+                        linePoint.push(i);
+                    }
+                    break;
+                }
+            }
+        }
+        function reset(canvasContainer,ctx){//圈圈画好，事件绑定
+            var linePoint=[];
+            canvasContainer.addEventListener("touchstart",function(e){
+                isPointSelect(e.touches[0],linePoint);
+            },false);
+            canvasContainer.addEventListener("touchmove",function(e){
+                e.preventDefault();
+                var touches= e.touches[0];
+                isPointSelect(touches,linePoint);
+                ctx.clearRect(0,0,CW,CH);
+                draw(ctx,btnLocalArr,linePoint,{X:touches.pageX,Y:touches.pageY});
+            },false);
+            canvasContainer.addEventListener("touchend",function(e){
+                ctx.clearRect(0,0,CW,CH);
+                draw(ctx,btnLocalArr,linePoint,null);
+                alert("密码结果是："+linePoint.join("->"));
+                linePoint=[];
+            },false);
+        }
+    </script>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+</body>
+</html>
